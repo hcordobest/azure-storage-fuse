@@ -32,7 +32,7 @@ namespace microsoft_azure {
             virtual unsigned int content_length() const = 0;
             virtual std::string content_md5() const { return std::string(); }
 
-            AZURE_STORAGE_API void build_request(const storage_account &a, http_base &h) const override;
+            AZURE_STORAGE_API void build_request(const storage_account &a, http_base &h, const storage_client_key &k) const override;
         };
 
     }

@@ -6,7 +6,7 @@
 namespace microsoft_azure {
     namespace storage {
 
-        void copy_blob_request_base::build_request(const storage_account &a, http_base &h) const {
+        void copy_blob_request_base::build_request(const storage_account &a, http_base &h, const storage_client_key &k) const {
             const auto &r = *this;
 
             h.set_absolute_timeout(5L);
@@ -36,6 +36,7 @@ namespace microsoft_azure {
 
             // set copy src
             add_ms_header(h, headers, constants::header_ms_copy_source, a.credential()->transform_url(source_url.get_domain() + source_url.get_path()));
+            add_customer_provided_key_headers(h, headers, k);
 
             a.credential()->sign_request(r, h, url, headers);
         }

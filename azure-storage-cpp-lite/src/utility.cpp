@@ -47,6 +47,14 @@ namespace microsoft_azure {
             return std::string();
         }
 
+        void add_customer_provided_key_headers(http_base &h, storage_headers &headers, const storage_client_key &k) {
+            if (k.is_valid()) {
+                add_ms_header(h, headers, constants::header_ms_encryption_algorithm, k.algorithm());
+                add_ms_header(h, headers, constants::header_ms_encryption_key, k.key());
+                add_ms_header(h, headers, constants::header_ms_encryption_key_sha256, k.key_sha256());
+            }
+        }
+
         void add_access_condition_headers(http_base &h, storage_headers &headers, const blob_request_base &r) {
             if (!r.if_modified_since().empty()) {
                 h.add_header(constants::header_if_modified_since, r.if_modified_since());

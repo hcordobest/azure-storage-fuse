@@ -16,7 +16,7 @@ namespace microsoft_azure {
         public:
             virtual std::string container() const = 0;
 
-            AZURE_STORAGE_API void build_request(const storage_account &a, http_base &h) const override;
+            AZURE_STORAGE_API void build_request(const storage_account &a, http_base &h, const storage_client_key &k) const override;
         };
 
     }

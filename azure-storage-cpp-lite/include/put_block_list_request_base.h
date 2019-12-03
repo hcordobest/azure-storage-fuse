@@ -44,7 +44,7 @@ public:
 
     //virtual std::map<std::string, std::string> ms_meta() const {};
 
-    AZURE_STORAGE_API void build_request(const storage_account &a, http_base &h) const override;
+    AZURE_STORAGE_API void build_request(const storage_account &a, http_base &h, const storage_client_key &k) const override;
 };
 
 //AZURE_STORAGE_API void build_request(const storage_account &a, const put_blob_request_base &r, http_base &h);

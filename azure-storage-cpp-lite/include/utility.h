@@ -9,6 +9,7 @@
 #include "http_base.h"
 #include "storage_request_base.h"
 #include "storage_url.h"
+#include "storage_client_key.h"
 
 namespace microsoft_azure {
 namespace storage {
@@ -43,6 +44,8 @@ inline void add_optional_header(http_base &h, const std::string &name, const std
         h.add_header(name, value);
     }
 }
+
+AZURE_STORAGE_API void add_customer_provided_key_headers(http_base &h, storage_headers &headers, const storage_client_key &k);
 
 inline void add_optional_content_encoding(http_base &h, storage_headers &headers, const std::string &value) {
     if (!value.empty()) {

@@ -2,11 +2,12 @@
 
 #include "constants.h"
 #include "utility.h"
+#include <syslog.h>
 
 namespace microsoft_azure {
 namespace storage {
 
-void put_blob_request_base::build_request(const storage_account &a, http_base &h) const {
+void put_blob_request_base::build_request(const storage_account &a, http_base &h, const storage_client_key &k) const {
     const auto &r = *this;
 
     h.set_data_rate_timeout();
@@ -26,7 +27,7 @@ void put_blob_request_base::build_request(const storage_account &a, http_base &h
     add_optional_content_md5(h, headers, r.content_md5());
     add_optional_content_type(h, headers, r.content_type());
     add_access_condition_headers(h, headers, r);
-
+    
     add_optional_header(h, constants::header_cache_control, r.cache_control());
     add_optional_header(h, constants::header_origin, r.origin());
 
@@ -72,6 +73,8 @@ void put_blob_request_base::build_request(const storage_account &a, http_base &h
     add_ms_header(h, headers, constants::header_ms_date, get_ms_date(date_format::rfc_1123));
     add_ms_header(h, headers, constants::header_ms_version, constants::header_value_storage_version);
 
+    add_customer_provided_key_headers(h, headers, k);
+    
     a.credential()->sign_request(r, h, url, headers);
 }
 

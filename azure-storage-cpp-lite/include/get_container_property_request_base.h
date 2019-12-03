@@ -7,6 +7,7 @@
 #include "http_base.h"
 #include "storage_account.h"
 #include "storage_request_base.h"
+#include "storage_client_key.h"
 
 namespace microsoft_azure {
     namespace storage {
@@ -15,7 +16,7 @@ namespace microsoft_azure {
         public:
             virtual std::string container() const = 0;
 
-            AZURE_STORAGE_API void build_request(const storage_account &a, http_base &h) const override;
+            AZURE_STORAGE_API void build_request(const storage_account &a, http_base &h, const storage_client_key &k) const override;
         };
 
         //AZURE_STORAGE_API void build_request(const storage_account &a, const get_blob_request_base &r, http_base &h);

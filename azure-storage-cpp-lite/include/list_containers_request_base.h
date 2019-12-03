@@ -21,7 +21,7 @@ namespace microsoft_azure {
             virtual int maxresults() const { return 0; }
             virtual bool include_metadata() const { return false; }
 
-            AZURE_STORAGE_API void build_request(const storage_account &a, http_base &h) const override;
+            AZURE_STORAGE_API void build_request(const storage_account &a, http_base &h, const storage_client_key &k) const override;
         };
 
         class list_containers_item {

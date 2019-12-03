@@ -22,6 +22,7 @@ set(AZURE_STORAGE_HEADER
   azure-storage-cpp-lite/include/storage_stream.h
   azure-storage-cpp-lite/include/storage_url.h
   azure-storage-cpp-lite/include/storage_errno.h
+  azure-storage-cpp-lite/include/storage_client_key.h
 
   azure-storage-cpp-lite/include/storage_request_base.h
   azure-storage-cpp-lite/include/get_blob_request_base.h
@@ -81,6 +82,7 @@ set(AZURE_STORAGE_SOURCE
   azure-storage-cpp-lite/src/storage_account.cpp
   azure-storage-cpp-lite/src/storage_credential.cpp
   azure-storage-cpp-lite/src/storage_url.cpp
+  azure-storage-cpp-lite/src/storage_client_key.cpp
 
   azure-storage-cpp-lite/src/get_blob_request_base.cpp
   azure-storage-cpp-lite/src/put_blob_request_base.cpp

@@ -8,7 +8,7 @@
 namespace microsoft_azure {
 namespace storage {
 
-void put_block_list_request_base::build_request(const storage_account &a, http_base &h) const {
+void put_block_list_request_base::build_request(const storage_account &a, http_base &h, const storage_client_key &k) const {
     const auto &r = *this;
 
     h.set_absolute_timeout(30L);
@@ -30,6 +30,7 @@ void put_block_list_request_base::build_request(const storage_account &a, http_b
     add_content_length(h, headers, static_cast<unsigned int>(xml.size()));
     add_optional_content_md5(h, headers, r.content_md5());
     add_access_condition_headers(h, headers, r);
+    add_customer_provided_key_headers(h, headers, k);
 
     add_ms_header(h, headers, constants::header_ms_client_request_id, r.ms_client_request_id(), true);
     add_ms_header(h, headers, constants::header_ms_lease_id, r.ms_lease_id(), true);

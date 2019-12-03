@@ -131,33 +131,56 @@ int read_config(const std::string configFile)
     while(std::getline(file, line))
     {
 
-        data.str(line.substr(line.find(" ")+1));
-        const std::string value(trim(data.str()));
+        if(line.substr(0,1)=="#") {
+            continue;
+        }
 
-        if(line.find("accountName") != std::string::npos)
+        const std::string key(line.substr(0, line.find(" ")));
+        data.str(line.substr(line.find(" ")+1));
+        
+        const std::string value(trim(data.str()));
+        syslog(LOG_DEBUG, "Configuration file key: '%s'",key.c_str());
+        syslog(LOG_DEBUG, "Configuration file value: '%s'",value.c_str());
+
+        if(key=="accountName")
         {
             std::string accountNameStr(value);
             str_options.accountName = accountNameStr;
         }
-        else if(line.find("accountKey") != std::string::npos)
+        else if(key=="accountKey")
         {
             std::string accountKeyStr(value);
             str_options.accountKey = accountKeyStr;
         }
-        else if(line.find("sasToken") != std::string::npos)
+        else if(key=="sasToken")
         {
-	    std::string sasTokenStr(value);
-	    str_options.sasToken = sasTokenStr;
+            std::string sasTokenStr(value);
+            str_options.sasToken = sasTokenStr;
         }
-        else if(line.find("containerName") != std::string::npos)
+        else if(key=="containerName")
         {
             std::string containerNameStr(value);
             str_options.containerName = containerNameStr;
         }
-        else if(line.find("blobEndpoint") != std::string::npos)
+        else if(key=="blobEndpoint")
         {
             std::string blobEndpointStr(value);
             str_options.blobEndpoint = blobEndpointStr;
+        }
+        else if(key=="encryptionKey")
+        {
+            std::string encryptionKeyStr(value);
+            str_options.encryptionKey = encryptionKeyStr;
+        }
+        else if(key=="encryptionKeySha256")
+        {
+            std::string encryptionKeySha256Str(value);
+            str_options.encryptionKeySha256 = encryptionKeySha256Str;
+        }
+        else if(key=="encryptionAlgorithm")
+        {
+            std::string encryptionAlgorithmStr(value);
+            str_options.encryptionAlgorithm = encryptionAlgorithmStr;
         }
 
         data.clear();
@@ -191,15 +214,17 @@ int read_config(const std::string configFile)
 
 void *azs_init(struct fuse_conn_info * conn)
 {
+
+    syslog(LOG_WARNING, "azs_init encryptionKeySha256: '%s'", str_options.encryptionKeySha256.c_str());
     if (str_options.use_attr_cache)
     {
         azure_blob_client_wrapper = std::make_shared<blob_client_attr_cache_wrapper>(blob_client_attr_cache_wrapper::blob_client_attr_cache_wrapper_init(str_options.accountName, str_options.accountKey, str_options.sasToken, 20/*concurrency*/, str_options.use_https,
-                                                                                                                    str_options.blobEndpoint));
+                                                                                                                    str_options.blobEndpoint, str_options.encryptionKey, str_options.encryptionKeySha256, str_options.encryptionAlgorithm));
     }
     else
     {
         azure_blob_client_wrapper = std::make_shared<blob_client_wrapper>(blob_client_wrapper::blob_client_wrapper_init(str_options.accountName, str_options.accountKey, str_options.sasToken, 20/*concurrency*/, str_options.use_https,
-                                                                                                                    str_options.blobEndpoint));
+                                                                                                                    str_options.blobEndpoint, str_options.encryptionKey, str_options.encryptionKeySha256, str_options.encryptionAlgorithm));
     }
 
     if(errno != 0)
@@ -469,7 +494,7 @@ int validate_storage_connection()
     {
         const int defaultMaxConcurrency = 20;
         blob_client_wrapper temp_azure_blob_client_wrapper = blob_client_wrapper::blob_client_wrapper_init(str_options.accountName, str_options.accountKey, str_options.sasToken, defaultMaxConcurrency, str_options.use_https, 
-													   str_options.blobEndpoint);
+													   str_options.blobEndpoint, str_options.encryptionKey, str_options.encryptionKeySha256, str_options.encryptionAlgorithm);
         if(errno != 0)
         {
             syslog(LOG_CRIT, "Unable to start blobfuse.  Creating local blob client failed: errno = %d.\n", errno);

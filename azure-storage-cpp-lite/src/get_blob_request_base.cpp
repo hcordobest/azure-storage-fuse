@@ -6,7 +6,7 @@
 namespace microsoft_azure {
     namespace storage {
 
-        void get_blob_request_base::build_request(const storage_account &a, http_base &h) const {
+        void get_blob_request_base::build_request(const storage_account &a, http_base &h, const storage_client_key &k) const {
             const auto &r = *this;
 
             h.set_data_rate_timeout();
@@ -36,6 +36,7 @@ namespace microsoft_azure {
             h.add_header(constants::header_user_agent, constants::header_value_user_agent);
             add_ms_header(h, headers, constants::header_ms_date, get_ms_date(date_format::rfc_1123));
             add_ms_header(h, headers, constants::header_ms_version, constants::header_value_storage_version);
+            add_customer_provided_key_headers(h, headers, k);
 
             a.credential()->sign_request(r, h, url, headers);
         }

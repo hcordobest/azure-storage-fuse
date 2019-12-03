@@ -10,6 +10,7 @@
 #include "storage_EXPORTS.h"
 
 #include "storage_account.h"
+#include "storage_client_key.h"
 #include "http/libcurl_http_client.h"
 #include "tinyxml2_parser.h"
 #include "executor.h"
@@ -32,8 +33,8 @@ namespace microsoft_azure { namespace storage {
         /// </summary>
         /// <param name="account">An existing <see cref="microsoft_azure::storage::storage_account" /> object.</param>
         /// <param name="size">An int value indicates the maximum concurrency expected during execute requests against the service.</param>
-        blob_client(std::shared_ptr<storage_account> account, int size)
-            : m_account(account) {
+        blob_client(std::shared_ptr<storage_account> account, int size, std::shared_ptr<storage_client_key>client_key)
+            : m_account(account), m_client_key(client_key) {
             m_context = std::make_shared<executor_context>(std::make_shared<tinyxml2_parser>(), std::make_shared<retry_policy>());
             m_client = std::make_shared<CurlEasyClient>(size);
         }
@@ -51,6 +52,13 @@ namespace microsoft_azure { namespace storage {
         /// </summary>
         std::shared_ptr<storage_account> account() const {
             return m_account;
+        }
+
+        /// <summary>
+        /// Gets the client provided key used with the storage
+        /// </summary>
+        std::shared_ptr<storage_client_key> client_key() const {
+            return m_client_key;
         }
 
         /// <summary>
@@ -255,6 +263,7 @@ namespace microsoft_azure { namespace storage {
         std::shared_ptr<CurlEasyClient> m_client;
         std::shared_ptr<storage_account> m_account;
         std::shared_ptr<executor_context> m_context;
+        std::shared_ptr<storage_client_key> m_client_key;
     };
 
     /// <summary>
@@ -437,7 +446,7 @@ namespace microsoft_azure { namespace storage {
         /// <param name="blob_endpoint">Blob endpoint URI to allow non-public clouds as well as custom domains.</param>
         /// <returns>Return a <see cref="microsoft_azure::storage::blob_client_wrapper"> object.</returns>
         static blob_client_wrapper blob_client_wrapper_init(const std::string &account_name, const std::string &account_key, const std::string &sas_token, const unsigned int concurrency, bool use_https, 
-							    const std::string &blob_endpoint);
+							    const std::string &blob_endpoint, const std::string &encryption_key, const std::string &encryption_key_sha256, const std::string &encryption_algorithm);
         /* C++ wrappers without exception but error codes instead */
 
         /* container level*/
@@ -681,7 +690,7 @@ namespace microsoft_azure { namespace storage {
         /// <param name="blob_endpoint">Blob endpoint URI to allow non-public clouds as well as custom domains.</param>
         /// <returns>Return a <see cref="microsoft_azure::storage::blob_client_wrapper"> object.</returns>
         static blob_client_attr_cache_wrapper blob_client_attr_cache_wrapper_init(const std::string &account_name, const std::string &account_key, const std::string &sas_token, const unsigned int concurrency, bool use_https, 
-                                const std::string &blob_endpoint);  
+                                const std::string &blob_endpoint, const std::string &encryption_key, const std::string &encryption_key_sha256, const std::string &encryption_algorithm);
 
         /// <summary>
         /// List blobs in segments.

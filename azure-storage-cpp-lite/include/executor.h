@@ -42,20 +42,20 @@ namespace microsoft_azure {
         template<typename RESPONSE_TYPE>
         class async_executor {
         public:
-            static void submit_request(std::promise<storage_outcome<RESPONSE_TYPE>> &promise, const storage_account &a, const storage_request_base &r, http_base &h, const executor_context &context, retry_context &retry) {
+            static void submit_request(std::promise<storage_outcome<RESPONSE_TYPE>> &promise, const storage_account &a, const storage_request_base &r, const storage_client_key &k, http_base &h, const executor_context &context, retry_context &retry) {
                 h.set_error_stream([](http_base::http_code) { return true; }, storage_iostream::create_storage_stream());
-                r.build_request(a, h);
+                r.build_request(a, h, k);
 
                 retry_info info = context.retry_policy()->evaluate(retry);
                 if (info.should_retry()) {
-                    h.submit([&promise, &a, &r, &h, &context, &retry](http_base::http_code result, storage_istream s, CURLcode code) {
+                    h.submit([&promise, &a, &r, &k, &h, &context, &retry](http_base::http_code result, storage_istream s, CURLcode code) {
                         std::string str(std::istreambuf_iterator<char>(s.istream()), std::istreambuf_iterator<char>());
                         if (code != CURLE_OK || unsuccessful(result)) {
                             promise.set_value(storage_outcome<RESPONSE_TYPE>(context.xml_parser()->parse_storage_error(str)));
                             retry.add_result(code == CURLE_OK ? result : HTTP_CODE_SERVICE_UNAVAILABLE);
                             h.reset_input_stream();
                             h.reset_output_stream();
-                            async_executor<RESPONSE_TYPE>::submit_request(promise, a, r, h, context, retry);
+                            async_executor<RESPONSE_TYPE>::submit_request(promise, a, r, k, h, context, retry);
                         }
                         else {
                             promise.set_value(storage_outcome<RESPONSE_TYPE>(context.xml_parser()->parse_response<RESPONSE_TYPE>(str)));
@@ -69,16 +69,17 @@ namespace microsoft_azure {
                 std::shared_ptr<storage_outcome<RESPONSE_TYPE>> outcome,
                 std::shared_ptr<storage_account> account,
                 std::shared_ptr<storage_request_base> request,
+                std::shared_ptr<storage_client_key> client_key,
                 std::shared_ptr<http_base> http,
                 std::shared_ptr<executor_context> context,
                 std::shared_ptr<retry_context> retry)
             {
                 http->set_error_stream([](http_base::http_code) { return true; }, storage_iostream::create_storage_stream());
-                request->build_request(*account, *http);
+                request->build_request(*account, *http, *client_key);
                 retry_info info = context->retry_policy()->evaluate(*retry);
                 if (info.should_retry())
                 {
-                    http->submit([promise, outcome, account, request, http, context, retry](http_base::http_code result, storage_istream s, CURLcode code)
+                    http->submit([promise, outcome, account, request, client_key, http, context, retry](http_base::http_code result, storage_istream s, CURLcode code)
                     {
                         bool retry_response = false;
                         std::string str(std::istreambuf_iterator<char>(s.istream()), std::istreambuf_iterator<char>());
@@ -143,7 +144,7 @@ namespace microsoft_azure {
                         {
                             http->reset_input_stream();
                             http->reset_output_stream();
-                            async_executor<RESPONSE_TYPE>::submit_helper(promise, outcome, account, request, http, context, retry);
+                            async_executor<RESPONSE_TYPE>::submit_helper(promise, outcome, account, request, client_key, http, context, retry);
                         }
                     }, info.interval());
                 }
@@ -156,13 +157,14 @@ namespace microsoft_azure {
             static std::future<storage_outcome<RESPONSE_TYPE>> submit(
                 std::shared_ptr<storage_account> account,
                 std::shared_ptr<storage_request_base> request,
+                std::shared_ptr<storage_client_key> client_key,
                 std::shared_ptr<http_base> http,
                 std::shared_ptr<executor_context> context)
             {
                 auto retry = std::make_shared<retry_context>();
                 auto outcome = std::make_shared<storage_outcome<RESPONSE_TYPE>>();
                 auto promise = std::make_shared<std::promise<storage_outcome<RESPONSE_TYPE>>>();
-                async_executor<RESPONSE_TYPE>::submit_helper(promise, outcome, account, request, http, context, retry);
+                async_executor<RESPONSE_TYPE>::submit_helper(promise, outcome, account, request, client_key, http, context, retry);
                 return promise->get_future();
             }
         };
@@ -170,13 +172,13 @@ namespace microsoft_azure {
         template<>
         class async_executor<void> {
         public:
-            static void submit_request(std::promise<storage_outcome<void>> &promise, const storage_account &a, const storage_request_base &r, http_base &h, const executor_context &context, retry_context &retry) {
+            static void submit_request(std::promise<storage_outcome<void>> &promise, const storage_account &a, const storage_request_base &r, const storage_client_key &k, http_base &h, const executor_context &context, retry_context &retry) {
                 h.set_error_stream(unsuccessful, storage_iostream::create_storage_stream());
-                r.build_request(a, h);
+                r.build_request(a, h, k);
 
                 retry_info info = context.retry_policy()->evaluate(retry);
                 if (info.should_retry()) {
-                    h.submit([&promise, &a, &r, &h, &context, &retry](http_base::http_code result, storage_istream s, CURLcode code) {
+                    h.submit([&promise, &a, &r, &k, &h, &context, &retry](http_base::http_code result, storage_istream s, CURLcode code) {
                         std::string str(std::istreambuf_iterator<char>(s.istream()), std::istreambuf_iterator<char>());
                         if (code != CURLE_OK || unsuccessful(result)) {
                             try
@@ -199,7 +201,7 @@ namespace microsoft_azure {
                             retry.add_result(code == CURLE_OK ? result : HTTP_CODE_SERVICE_UNAVAILABLE);
                             h.reset_input_stream();
                             h.reset_output_stream();
-                            async_executor<void>::submit_request(promise, a, r, h, context, retry);
+                            async_executor<void>::submit_request(promise, a, r, k, h, context, retry);
                         }
                         else {
                             promise.set_value(storage_outcome<void>());
@@ -213,18 +215,19 @@ namespace microsoft_azure {
                 std::shared_ptr<storage_outcome<void>> outcome,
                 std::shared_ptr<storage_account> account,
                 std::shared_ptr<storage_request_base> request,
+                std::shared_ptr<storage_client_key> client_key,
                 std::shared_ptr<http_base> http,
                 std::shared_ptr<executor_context> context,
                 std::shared_ptr<retry_context> retry)
             {
                 http->reset();
                 http->set_error_stream(unsuccessful, storage_iostream::create_storage_stream());
-                request->build_request(*account, *http);
+                request->build_request(*account, *http, *client_key);
 
                 retry_info info = context->retry_policy()->evaluate(*retry);
                 if (info.should_retry())
                 {
-                    http->submit([promise, outcome, account, request, http, context, retry](http_base::http_code result, storage_istream s, CURLcode code)
+                    http->submit([promise, outcome, account, request, client_key, http, context, retry](http_base::http_code result, storage_istream s, CURLcode code)
                     {
                         std::string str(std::istreambuf_iterator<char>(s.istream()), std::istreambuf_iterator<char>());
                         if (code != CURLE_OK || unsuccessful(result))
@@ -254,7 +257,7 @@ namespace microsoft_azure {
                             retry->add_result(code == CURLE_OK ? result: HTTP_CODE_SERVICE_UNAVAILABLE);
                             http->reset_input_stream();
                             http->reset_output_stream();
-                            async_executor<void>::submit_helper(promise, outcome, account, request, http, context, retry);
+                            async_executor<void>::submit_helper(promise, outcome, account, request, client_key, http, context, retry);
                         }
                         else
                         {
@@ -272,13 +275,14 @@ namespace microsoft_azure {
             static std::future<storage_outcome<void>> submit(
                 std::shared_ptr<storage_account> account,
                 std::shared_ptr<storage_request_base> request,
+                std::shared_ptr<storage_client_key> client_key,
                 std::shared_ptr<http_base> http,
                 std::shared_ptr<executor_context> context)
             {
                 auto retry = std::make_shared<retry_context>();
                 auto outcome = std::make_shared<storage_outcome<void>>();
                 auto promise = std::make_shared<std::promise<storage_outcome<void>>>();
-                async_executor<void>::submit_helper(promise, outcome, account, request, http, context, retry);
+                async_executor<void>::submit_helper(promise, outcome, account, request, client_key, http, context, retry);
                 return promise->get_future();
             }
         };

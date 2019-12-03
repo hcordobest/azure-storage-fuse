@@ -6,7 +6,7 @@
 namespace microsoft_azure {
     namespace storage {
 
-        void list_containers_request_base::build_request(const storage_account &a, http_base &h) const {
+        void list_containers_request_base::build_request(const storage_account &a, http_base &h, const storage_client_key &/*k*/) const {
             const auto &r = *this;
 
             h.set_absolute_timeout(30L);

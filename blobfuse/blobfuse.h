@@ -27,7 +27,7 @@
 // This line must come before #include <fuse.h>.
 #define FUSE_USE_VERSION 29
 
-#include <fuse.h>
+#include <fuse/fuse.h>
 #include <stddef.h>
 #include "blob/blob_client.h"
 
@@ -126,6 +126,9 @@ struct str_options
     std::string sasToken;
     std::string containerName;
     std::string tmpPath;
+    std::string encryptionKey;
+    std::string encryptionKeySha256;
+    std::string encryptionAlgorithm = constants::header_value_encryption_algorithm_aes256;
     bool use_https;
     bool use_attr_cache;
 };

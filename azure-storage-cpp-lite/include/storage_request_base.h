@@ -6,13 +6,14 @@ namespace microsoft_azure {
     namespace storage {
 
         class storage_account;
+        class storage_client_key;
         class http_base;
 
         class storage_request_base {
         public:
             virtual std::string ms_client_request_id() const { return std::string(); }
 
-            virtual void build_request(const storage_account &a, http_base &h) const = 0;
+            virtual void build_request(const storage_account &a, http_base &h, const storage_client_key &k) const = 0;
         };
 
         class blob_request_base : public storage_request_base {

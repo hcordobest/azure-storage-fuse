@@ -31,7 +31,7 @@ public:
     virtual int maxresults() const { return 0; }
     virtual include includes() const { return include::unspecifies; }
 
-    AZURE_STORAGE_API void build_request(const storage_account &a, http_base &h) const override;
+    AZURE_STORAGE_API void build_request(const storage_account &a, http_base &h, const storage_client_key &k) const override;
 };
 
 class list_blobs_item {
@@ -69,7 +69,7 @@ public:
     virtual int maxresults() const { return 0; }
     virtual list_blobs_request_base::include includes() const { return list_blobs_request_base::include::unspecifies; }
 
-    AZURE_STORAGE_API void build_request(const storage_account &a, http_base &h) const override;
+    AZURE_STORAGE_API void build_request(const storage_account &a, http_base &h, const storage_client_key &k) const override;
 };
 
 class list_blobs_hierarchical_item {

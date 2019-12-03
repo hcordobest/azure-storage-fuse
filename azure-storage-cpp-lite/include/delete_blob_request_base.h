@@ -25,7 +25,7 @@ namespace microsoft_azure {
             virtual std::string snapshot() const { return std::string(); }
             virtual delete_snapshots ms_delete_snapshots() const { return delete_snapshots::unspecified; }
 
-            AZURE_STORAGE_API void build_request(const storage_account &a, http_base &h) const override;
+            AZURE_STORAGE_API void build_request(const storage_account &a, http_base &h, const storage_client_key &k) const override;
         };
 
         //AZURE_STORAGE_API void build_request(const storage_account &a, const delete_blob_request_base &r, http_base &h);

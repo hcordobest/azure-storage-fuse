@@ -3,6 +3,8 @@
 #include "http/libcurl_http_client.h"
 
 #include "constants.h"
+#include <syslog.h>
+#include <cstring>
 
 namespace microsoft_azure {
     namespace storage {
@@ -55,6 +57,12 @@ namespace microsoft_azure {
             m_slist = curl_slist_append(m_slist, "Expect:");
             check_code(curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, m_slist));
 
+            auto temp_list = m_slist;
+            syslog(LOG_DEBUG, "Outgoing headers:");
+            while (temp_list) {
+                syslog(LOG_DEBUG, "Header: %s\n", temp_list->data);
+                temp_list = temp_list->next;
+            }
             const auto result = curl_easy_perform(m_curl);
             check_code(result); // has nothing to do with checks, just resets errno for succeeded ops.
             return result;
@@ -63,6 +71,7 @@ namespace microsoft_azure {
         size_t CurlEasyRequest::header_callback(char *buffer, size_t size, size_t nitems, void *userdata) {
             CurlEasyRequest::MY_TYPE *p = static_cast<CurlEasyRequest::MY_TYPE *>(userdata);
             std::string header(buffer, size * nitems);
+            syslog(LOG_DEBUG, "Incoming headers:\n%s", header.c_str());
             auto colon = header.find(':');
             if (colon == std::string::npos) {
                 auto space = header.find(' ');

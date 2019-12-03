@@ -6,7 +6,7 @@
 namespace microsoft_azure {
     namespace storage {
 
-        void put_page_request_base::build_request(const storage_account &a, http_base &h) const {
+        void put_page_request_base::build_request(const storage_account &a, http_base &h, const storage_client_key &k) const {
             const auto &r = *this;
 
             h.set_data_rate_timeout();
@@ -24,6 +24,7 @@ namespace microsoft_azure {
             add_content_length(h, headers, r.content_length());
             add_optional_content_md5(h, headers, r.content_md5());
             add_access_condition_headers(h, headers, r);
+            add_customer_provided_key_headers(h, headers, k);
 
             add_ms_header(h, headers, constants::header_ms_range, get_ms_range(r.start_byte(), r.end_byte()), true);
 

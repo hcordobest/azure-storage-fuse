@@ -22,7 +22,7 @@ namespace microsoft_azure {
             virtual std::string origin() const { return std::string(); }
             virtual bool ms_range_get_content_md5() const { return false; }
 
-            AZURE_STORAGE_API void build_request(const storage_account &a, http_base &h) const override;
+            AZURE_STORAGE_API void build_request(const storage_account &a, http_base &h, const storage_client_key &k) const override;
         };
 
         //AZURE_STORAGE_API void build_request(const storage_account &a, const get_blob_request_base &r, http_base &h);
