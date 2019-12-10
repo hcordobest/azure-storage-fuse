@@ -25,3 +25,5 @@ then
 	exit $ERRORCODE
 fi
 make
+make package
+
