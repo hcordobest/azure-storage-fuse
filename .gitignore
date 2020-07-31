@@ -50,3 +50,21 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+# covers cmake-build-debug and cmake-build-release
+cmake-build-*/
+build/
+build/*
+.idea/
+
+# vscode
+.vscode/
+
+launch.json
+tasks.json
+connection*.cfg
+connection.cfg
+
+# blobcp binary
+tools/blobcp
+connection.cfg
+stresstests/blobfusestress

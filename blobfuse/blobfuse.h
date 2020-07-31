@@ -20,35 +20,28 @@
 #include <gnutls/gnutls.h>
 #include <gcrypt.h>
 #include <pthread.h>
-#include <syslog.h>
+
 
 // Declare that we're using version 2.9 of FUSE
 // 3.0 is not built-in to many distros yet.
 // This line must come before #include <fuse.h>.
 #define FUSE_USE_VERSION 29
+<<<<<<< HEAD
 
 #include <fuse/fuse.h>
+=======
+#include <fuse.h>
+
+>>>>>>> 8c4db0fdc03a29fc9c5e18711fa05fa0d4cdb04d
 #include <stddef.h>
-#include "blob/blob_client.h"
+#include <BlobfuseGlobals.h>
 
 #define UNREFERENCED_PARAMETER(p) (p)
-
-/* Define high and low gc_cache threshold values*/
-/* These threshold values were not calculated and are just an approximation of when we should be clearing the cache */
-#define HIGH_THRESHOLD_VALUE 90
-#define LOW_THRESHOLD_VALUE 80
-
-/* Define errors and return codes */
-#define D_NOTEXIST -1
-#define D_EMPTY 0
-#define D_NOTEMPTY 1
-
-#define AZS_DEBUGLOGV(fmt,...) do {syslog(LOG_DEBUG,"Function %s, in file %s, line %d: " fmt, __func__, __FILE__, __LINE__, __VA_ARGS__); } while(0)
-#define AZS_DEBUGLOG(fmt) do {syslog(LOG_DEBUG,"Function %s, in file %s, line %d: " fmt, __func__, __FILE__, __LINE__); } while(0)
 
 // instruct gcrypt to use pthread
 GCRY_THREAD_OPTION_PTHREAD_IMPL;
 
+<<<<<<< HEAD
 using namespace microsoft_azure::storage;
 
 // We use two different locking schemes to protect files / blobs against data corruption and data loss scenarios.
@@ -150,6 +143,16 @@ extern std::map<int, int> error_mapping;
 // String that signifies that this blob represents a directory.
 // This string should be appended to the name of the directory.  The resultant string should be the name of a zero-length blob; this represents the directory on the service.
 extern const std::string former_directory_signifier;
+=======
+using namespace azure::storage_lite;
+using namespace blobfuse_constants;
+
+extern std::shared_ptr<gc_cache> g_gc_cache;
+extern struct configParams config_options;
+extern float kernel_version;
+
+void populate_kernel_version();
+>>>>>>> 8c4db0fdc03a29fc9c5e18711fa05fa0d4cdb04d
 
 // Helper function to map an HTTP error to an errno.
 // Should be called on any errno returned from the Azure Storage cpp lite lib.
@@ -169,7 +172,7 @@ int shared_lock_file(int flags, int fd);
 int ensure_files_directory_exists_in_cache(const std::string& file_path);
 
 // Greedily list all blobs using the input params.
-std::vector<std::pair<std::vector<list_blobs_hierarchical_item>, bool>> list_all_blobs_hierarchical(const std::string& container, const std::string& delimiter, const std::string& prefix);
+std::vector<std::pair<std::vector<list_blobs_segmented_item>, bool>> list_all_blobs_segmented(const std::string& container, const std::string& delimiter, const std::string& prefix, const std::size_t maxresults=0);
 
 // Returns:
 // 0 if there's nothing there (the directory does not exist)
@@ -357,13 +360,17 @@ void azs_destroy(void *private_data);
 /* Not implemented functions.
  */
 int azs_access(const char *path, int mask);
-int azs_readlink(const char *path, char *buf, size_t size);
 int azs_fsync(const char *path, int isdatasync, struct fuse_file_info *fi);
 int azs_chown(const char *path, uid_t uid, gid_t gid);
 int azs_chmod(const char *path, mode_t mode);
 int azs_utimens(const char *path, const struct timespec ts[2]);
 int azs_truncate(const char *path, off_t off);
 int azs_setxattr(const char *path, const char *name, const char *value, size_t size, int flags);
+
+// symlink related handlers
+bool is_symlink_blob(std::vector<std::pair<std::string, std::string>> metadata);
+int azs_readlink(const char *path, char *buf, size_t size);
+int azs_symlink(const char *from, const char *to);
 
 /** Not implemented. */
 int azs_getxattr(const char *path, const char *name, char *value, size_t size);
